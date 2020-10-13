@@ -49,3 +49,29 @@
     "-r ben hooper" : Container Registry within Azure
     "-f .\learnacr\Dockerfile ." : location of dockerfile, put files in container
     ```
+3. ASP.NET Core MVC
+    - Build Project: `dotnet new mvc -o aspnetapp`
+    - Add Dockerfile
+
+    ```dockerfile
+    FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build-env
+    WORKDIR /app
+
+    # Copy csproj and restore as distinct layers
+    COPY *.csproj ./
+    RUN dotnet restore
+
+    # Copy everything else and build
+    COPY . ./
+    RUN dotnet publish -c Release -o out
+
+    # Build runtime image
+    FROM mcr.microsoft.com/dotnet/core/aspnet:3.1
+    WORKDIR /app
+    COPY --from=build-env /app/out .
+    ENTRYPOINT ["dotnet", "aspnetapp.dll"]
+    ```
+    - Build Docker `docker build -t aspnetapp .`
+    - Run Docker `docker run -d -p 8080:80 --name myapp aspnetapp` on port 8080
+    
+    Note: To stop; type `docker ps`, Get ID from container running. Then type`docker stop {id}`.
